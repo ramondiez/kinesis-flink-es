@@ -1,0 +1,74 @@
+curl -XPUT "http://localhost:9200/metrics"
+'{
+"mappings": {
+"cpu": {
+"properties": {
+"name": {
+"type": "keyword"
+},
+"maxCPU": {
+"type": "long"
+},
+"minCPU": {
+"type": "long"
+},
+"avgCPU": {
+"type": "long"
+},
+"timestamp": {
+"type": "date"
+}
+}
+}
+}
+}'
+
+curl -XGET 'localhost:9200/metrics/_search/'
+
+curl -XGET 'localhost:9200/demo/_search/' -d '
+{
+"query" : {
+"match_all" : {}
+}
+}' -H 'Content-Type: application/json'
+
+
+curl -XPUT search-fara-rknaosjhjehzpq4f7hzuunaqea.eu-central-1.es.amazonaws.com/metrics/metrics/1 -d '{"name": "CPU", "maxCPU": 10000, "minCPU": 2000, "avgCPU": 3000, "timestamp": 1561028737 }' -H 'Content-Type: application/json'
+
+http://search-fara-rknaosjhjehzpq4f7hzuunaqea.eu-central-1.es.amazonaws.com/metrics/_search?pretty=true&q=*:*
+
+curl -XGET 'search-fara-rknaosjhjehzpq4f7hzuunaqea.eu-central-1.es.amazonaws.com/metrics/_search?search_type=scan&scroll=10m&size=50' -d '
+{
+"query" : {
+"match_all" : {}
+}
+}' -H 'Content-Type: application/json'
+
+
+
+
+curl -XPUT "https://search-fara-rknaosjhjehzpq4f7hzuunaqea.eu-central-1.es.amazonaws.com/metrics/metrics/3" -d '
+{"name": "CPU", "maxCPU": 10000, "minCPU": 2000, "avgCPU": 3000, "timestamp": 1561028737 }
+' -H 'Content-Type: application/json'
+
+curl -XGET 'search-fara-rknaosjhjehzpq4f7hzuunaqea.eu-central-1.es.amazonaws.com/metrics/_search/?size=1000&pretty=1'
+
+
+cd /usr/local/Cellar/apache-flink/1.8.0/libexec/
+./bin/flink run /Users/ramondle/Documents/Amazon/Codigo/kinesis-flink-es-vcenter/target/aws-kinesis-analytics-java-apps-1.0.jar --port 9000
+
+
+
+
+
+
+# Create mapping inside a index
+cat /Users/ramondle/Documents/Amazon/Codigo/kinesis-flink-es-vcenter/utils/ElasticSearch/mapping.json | curl -XPUT "http://localhost:9200/metrics" -H 'Content-Type: application/json' -d @-
+
+# check the documents
+curl -XGET 'localhost:9200/metrics/_search/' -d '
+{
+"query": {
+"match_all": {}
+}
+}' -H 'Content-Type: application/json'

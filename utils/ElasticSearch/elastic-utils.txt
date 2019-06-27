@@ -1,0 +1,10 @@
+#Start ElasticSearch
+docker run -d -p 9200:9200 -e "discovery.type=single-node" \
+-v esdata:/usr/share/elasticsearch/data \
+docker.elastic.co/elasticsearch/elasticsearch:6.5.4
+
+#Start Kibana
+docker run -d --name kibana -e "ELASTICSEARCH_URL=http://192.168.1.172:9200" -p 5601:5601 docker.elastic.co/kibana/kibana:6.5.4
+
+#Url Kibana
+http://localhost:5601

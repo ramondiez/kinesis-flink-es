@@ -1,0 +1,23 @@
+{
+  "mappings": {
+    "cpu": {
+      "properties": {
+        "name": {
+          "type": "keyword"
+        },
+        "maxCPU": {
+          "type": "long"
+        },
+        "minCPU": {
+          "type": "long"
+        },
+        "avgCPU": {
+          "type": "long"
+        },
+        "timestamp": {
+          "type": "date"
+        }
+      }
+    }
+  }
+}
