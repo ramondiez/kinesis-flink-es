@@ -73,6 +73,9 @@ services:
     environment:
       - JOB_MANAGER_RPC_ADDRESS=jobmanager
 
+volumes:
+  esdata:
+    driver: local
 ```
 
 Elasticsearch estará disponible en http://localhost:9200/
