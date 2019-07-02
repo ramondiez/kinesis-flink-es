@@ -38,6 +38,8 @@ services:
       memlock:
         soft: -1
         hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
 
