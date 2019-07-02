@@ -137,6 +137,13 @@ Kinesis Data Generator (https://awslabs.github.io/amazon-kinesis-data-generator/
 ```
 git clone https://github.com/ramondiez/kinesis-flink-es.git
 ```
+* En fichero pom hay una entrada para especificar la clase **Main** que hay que ejecutar.
+```
+<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+<mainClass>com.amazonaws.services.infrav.StreamingJob</mainClass>
+</transformer>
+```
+
 * Navega has el directorio *kinesis-flink-es* que contiene el fichero  pom.xml file.  Y ejecutar el siguiente comando para obtener el fichero jar.
 ```
 mvn package
