@@ -1,0 +1,11 @@
+
+# Create mapping inside a index
+cat ~/mapping.json | curl -XPUT "http://localhost:9200/metrics" -H 'Content-Type: application/json' -d @-
+
+# check the documents
+curl -XGET 'localhost:9200/metrics/_search/' -d '
+{
+"query": {
+"match_all": {}
+}
+}' -H 'Content-Type: application/json'
