@@ -10,6 +10,77 @@ El caso de uso quiere demostrar cómo las trazas de Vcenter son ingestadas media
 https://docs.aws.amazon.com/kinesisanalytics/latest/java/getting-started.html#setting-up-prerequisites
 ```
 
+## Entorno
+El siguiente ejemplo despliega mediante un docker-compose un Elasticsearch + Kibana + Flink para poder ejecutar los ejemplos en local.
+Para ello es necesario que esté instalado la utilidad de docker-compose
+
+* Abrir una terminal en la raíz del proyecto y ejecutar el siguiente comando.
+```
+docker-compose up -d
+```
+Este comando cargará el siguiente fichero:
+
+```
+version: '3'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.5.4
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.5.4
+    container_name: kibana
+    depends_on: ['elasticsearch']
+    ports:
+      - "5601:5601"
+
+  jobmanager:
+    image: flink:1.8.0
+    expose:
+      - "6123"
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+
+  taskmanager:
+    image: flink:1.8.0
+    expose:
+      - "6121"
+      - "6122"
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    links:
+      - "jobmanager:jobmanager"
+    environment:
+    - JOB_MANAGER_RPC_ADDRESS=jobmanager
+```
+
+Elasticsearch estará disponible en http://localhost:9200/
+Kibana UI estará disponible en http://localhost:5601/
+Flink estará disponible en http://localhost:8081
+
+## Creación del índice en ES
+En el directorio de utils-->ElasticSearch hay un documento que explica cómo generar un índice y su respectivo mapping en ElasticSearch
+
+```
+cat ~/mapping.json | curl -XPUT "http://localhost:9200/metrics" -H 'Content-Type: application/json' -d @-
+```
+
+
 ### Add the Apache Flink Kinesis connector to your local environment
 El conector de Kinesis para Flink tiene una dependencia bajo la licencia de [Amazon Software License](https://aws.amazon.com/asl/) (ASL) por lo que no es posible descargar el artefacto de maven.  Para descargar y compilar el conector, haz los siguientes pasos:
 
@@ -44,7 +115,7 @@ $ aws kinesis create-stream \
 ```
 
 ### Usar datos de ejemplo
-Kinesis Data Generator (https://awslabs.github.io/amazon-kinesis-data-generator/web/help.html) nos da la opción de mandar trazas en base a unos templates.
+Kinesis Data Generator (https://awslabs.github.io/amazon-kinesis-data-generator/web/help.html) nos da la opción de mandar registros de Kinesis en base a unos templates.
 
 * For the order stream, configure the following template at a rate of 100 records per second.
 ```
@@ -64,28 +135,19 @@ Kinesis Data Generator (https://awslabs.github.io/amazon-kinesis-data-generator/
 ### Descargar y paquetizar la aplicación
 * Descargar el código de github
 ```
-git clone https://github.com/aws-samples/amazon-kinesis-data-analytics-flinktableapi
+git clone https://github.com/ramondiez/kinesis-flink-es.git
 ```
-* Navigate to the newly created *amazon-kinesis-data-analytics-flinktableapi* directory containing the pom.xml file.  Execute the following command to create your JAR file.
+* Navega has el directorio *kinesis-flink-es* que contiene el fichero  pom.xml file.  Y ejecutar el siguiente comando para obtener el fichero jar.
 ```
 mvn package
 ```
 * Si la aplicación compila correctamente la siguiente fichero será creado.  
 ```
-target/aws-kinesis-analytics-java-apps-1.0.jar
+target/kinesis-flink-es-1.0.jar
 ```
-* At this point, proceed with the getting started guide to upload and start your application
+* Una vez tengamos el fichero jar, deberemos subirlo a flink y ejecutarlo
 ```
-https://docs.aws.amazon.com/kinesisanalytics/latest/java/get-started-exercise.html#get-started-exercise-6
+$ JOBMANAGER_CONTAINER=$(docker ps --filter name=jobmanager --format={{.ID}})
+$ docker cp target/kinesis-flink-es-1.0.jar "$JOBMANAGER_CONTAINER":/job.jar
+$ docker exec -t -i "$JOBMANAGER_CONTAINER" flink run /job.jar
 ```
-
-### Development Environment Setup
-You can inspect and modify the code by modifying the .java files located within the project tree.  In my development, I used IntelliJ IDEA from Jetbrains. I followed the steps listed within the Apache Flink Documentation to setup my environment.
-```
-https://ci.apache.org/projects/flink/flink-docs-stable/flinkDev/ide_setup.html
-```
-Once the cloned project is imported as a Maven project, to be able to run and debug the application within the IDE, you must conduct an additional step of settting the project runtime configuration.  Add a configuration using the *Application* template and set the following parameters
-1. *Main class* - com.amazonaws.services.kinesisanalytics.StreamingJob
-1. *Working directory* - $MODULE_WORKING_DIR$
-1. *Use classpath of module* - aws-kinesis-analytics-java-apps
-1. *JRE* - Default (1.8 - SDK of 'aws-kinesis-analytics-java-apps' module)
