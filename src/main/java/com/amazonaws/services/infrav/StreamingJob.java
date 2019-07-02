@@ -48,6 +48,8 @@ public class StreamingJob {
                 new JsonNodeDeserializationSchema(),
                 kinesisConsumerConfig));
 
+
+
         //Map incomming data from the generic Object Node to a POJO object
         //Set if TimeCharacteristic = "EventTime" to determine how the the Time Attribute rowtime will be determined from the incoming data
         DataStream<CpuAgg> vcenterAggregates = vcenterMetricStreamObject
@@ -57,6 +59,13 @@ public class StreamingJob {
                     LOG.info("faraKinesis2 {}",vcenterMetric.getName());
                     return vcenterMetric;
                 })
+                /* Esta line establece que los eventos se ingesten en base al tiempo de creación del evento y no a la llegada del evento.
+                .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<VcenterMetric>() {
+                            @Override
+                            public long extractAscendingTimestamp(VcenterMetric element) {
+                                return element.timestamp.getTime();
+                           }})
+                 */
                 .keyBy("name")
                 .timeWindow(Time.seconds(5))
                 .apply(new WindowFunction<VcenterMetric, CpuAgg, Tuple, TimeWindow>() {
@@ -74,15 +83,9 @@ public class StreamingJob {
                     }
                 });;
 
+        // Save the aggregate to elasticsearch
+        vcenterAggregates.addSink(AmazonElasticSearchSink.buildElasticsearchSink("localhost:9200", "eu-central-1", "metrics", "cpu"));
 
-        vcenterAggregates.addSink(AmazonElasticSearchSink.buildElasticsearchSink("vpc-fara-rknaosjhjehzpq4f7hzuunaqea.eu-central-1.es.amazonaws.com:80", "eu-central-1", "metrics", "cpu"));
-        /*
-        .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<VcenterMetric>() {
-                    @Override
-                    public long extractAscendingTimestamp(VcenterMetric element) {
-                        return element.timestamp.getTime();
-                   }})
-         */
         env.execute();
     }
 }

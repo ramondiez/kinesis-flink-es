@@ -70,29 +70,8 @@ public class SocketStream {
                     }
                 });
 
-/*
- .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<VcenterMetric>() {
-                    @Override
-                    public long extractAscendingTimestamp(VcenterMetric element) {
-                        return element.timestamp.getTime();
-                    }})
- */
-        /*if (ss.prop.containsKey("ElasticsearchEndpoint")) {
-            final String elasticsearchEndpoint = ss.prop.getProperty("ElasticsearchEndpoint");
-            final String region = ss.prop.getProperty("Region", Regions.getCurrentRegion().getName());
-            System.out.println(elasticsearchEndpoint +" "+ region);
-            vcenterAggregates.addSink(AmazonElasticSearchSink.buildElasticsearchSink(elasticsearchEndpoint, region, "metrics", "cpu"));
-        }*/
-        //vcenterAggregates.print();
-        //vcenterAggregates.addSink(AmazonElasticSearchSink.buildElasticsearchSink("https://search-fara-rknaosjhjehzpq4f7hzuunaqea.eu-central-1.es.amazonaws.com:443", "eu-central-1", "metrics", "cpu"));
         vcenterAggregates.addSink(AmazonElasticSearchSink.buildElasticsearchSink("127.0.0.1:9200", "eu-central-1", "metrics", "cpu"));
-        //vcenterAggregates.print();
-        /*final ImmutableMap<String, String> config = ImmutableMap.<String, String>builder()
-                .put("es-endpoint", "https://search-fara-rknaosjhjehzpq4f7hzuunaqea.eu-central-1.es.amazonaws.com:443")
-                .put("region","eu-central-1")
-                .build();
 
-        vcenterAggregates.addSink(new ElasticsearchJestSink<>(config, "metrics", "metrics"));*/
 
         env.setMaxParallelism(1).execute();
 

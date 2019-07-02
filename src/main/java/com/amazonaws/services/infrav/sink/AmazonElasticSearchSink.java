@@ -56,7 +56,6 @@ public class AmazonElasticSearchSink {
                         return Requests.indexRequest()
                                 .index(indexName)
                                 .type(type)
-                                //.source(element.toString(),XContentType.JSON);
                                 .source(objectMapper.writeValueAsString(element),XContentType.JSON);
                     }
                     @Override
@@ -68,11 +67,17 @@ public class AmazonElasticSearchSink {
                 }
         );
 
-        /*esSinkBuilder.setBulkFlushMaxActions(FLUSH_MAX_ACTIONS);
+        /* Uncomment the next values for bulk request
+        esSinkBuilder.setBulkFlushMaxActions(FLUSH_MAX_ACTIONS);
         esSinkBuilder.setBulkFlushInterval(FLUSH_INTERVAL_MILLIS);
         esSinkBuilder.setBulkFlushMaxSizeMb(FLUSH_MAX_SIZE_MB);
-        esSinkBuilder.setBulkFlushBackoff(true);*/
+        esSinkBuilder.setBulkFlushBackoff(true);
+        */
+
+        //Comment the line below. Just for testing.
         esSinkBuilder.setBulkFlushMaxActions(2);
+
+
       /*  esSinkBuilder.setRestClientFactory(
                 restClientBuilder -> restClientBuilder.setHttpClientConfigCallback(callback -> callback.addInterceptorLast(requestInterceptor))
         );*/
